@@ -2,10 +2,21 @@
 
 A simple, production-ready authentication module built with:
 
-- Frontend: React Router + TypeScript
-- Backend: NestJS + MongoDB (Mongoose) + JWT
+- **Frontend:** React Router + TypeScript + Tailwind CSS + shadcn/ui
+- **Backend:** NestJS + MongoDB (Mongoose) + JWT
+- **Architecture:** Nx Monorepo with integrated tooling
 
 This app lets users sign up, sign in, and access a protected page. It includes input validation, password hashing, JWT authentication, a protected endpoint, basic security hardening, and API docs.
+
+## Architecture
+
+This project uses **Nx** as a monorepo build system, providing:
+- **Unified workspace** for frontend and backend applications
+- **Integrated testing** with shared configuration
+- **Code generation** and scaffolding tools
+- **Dependency graph** visualization
+- **Efficient caching** for builds and tests
+- **Parallel execution** of tasks across projects
 
 ## Requirements implemented
 
@@ -77,8 +88,30 @@ A JWT token is stored in `localStorage` on successful auth. The `/app` page veri
 
 ## Project Structure
 
-- `apps/frontend` — React Router app
+This is an **Nx monorepo** with the following structure:
+
+- `apps/frontend` — React Router app with Vite
 - `apps/backend` — NestJS app (Mongoose, Auth, Users)
+- `apps/frontend-e2e` — Cypress E2E tests for frontend
+- `apps/backend-e2e` — Jest E2E tests for backend API
+
+### Nx Commands
+
+Nx provides powerful commands for managing the monorepo:
+
+```bash
+# Run specific project
+npx nx serve @auth-app/backend
+npx nx serve @auth-app/frontend
+
+# Run targets across all projects
+npx nx run-many --target=build --all
+npx nx run-many --target=test --all
+npx nx run-many --target=lint --all
+
+# View dependency graph
+npx nx graph
+```
 
 ## Scripts
 
