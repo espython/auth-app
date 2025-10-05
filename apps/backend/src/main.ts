@@ -9,10 +9,30 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        const messages = errors.map((error) => ({
+          field: error.property,
+          message: Object.values(error.constraints || {})[0],
+        }));
+        return {
+          statusCode: 400,
+          message: messages[0]?.message || 'Validation failed',
+          errors: messages,
+        };
+      },
+    })
+  );
   app.use(helmet());
   app.enableCors({
-    origin: ['http://localhost:4200'],
+    origin: ['http://localhost:4200', 'http://localhost:5173'],
     credentials: false,
   });
 

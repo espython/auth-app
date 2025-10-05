@@ -13,11 +13,14 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { LogIn } from 'lucide-react';
+import { signInSchema } from '../lib/validations/auth';
+import { useUserStore } from '../store/user-store';
 
 const API_BASE = 'http://localhost:3000/api';
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const { login } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +30,10 @@ export default function SignIn() {
     e.preventDefault();
     setError(null);
 
-    // basic validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    // Validate using Zod schema
+    const validation = signInSchema.safeParse({ email, password });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 
@@ -46,10 +46,16 @@ export default function SignIn() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to sign in');
-      localStorage.setItem('token', data.access_token);
+      
+      // Store user and token in Zustand
+      login({ email }, data.access_token);
       navigate('/app');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }

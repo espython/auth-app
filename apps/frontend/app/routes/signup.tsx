@@ -13,11 +13,14 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { UserPlus } from 'lucide-react';
+import { signUpSchema } from '../lib/validations/auth';
+import { useUserStore } from '../store/user-store';
 
 const API_BASE = 'http://localhost:3000/api';
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { login } = useUserStore();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -28,19 +31,10 @@ export default function SignUp() {
     e.preventDefault();
     setError(null);
 
-    // validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-    if (name.trim().length < 3) {
-      setError('Name must be at least 3 characters');
-      return;
-    }
-    if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(password)) {
-      setError(
-        'Password must be 8+ chars with at least one letter, one number, and one special character'
-      );
+    // Validate using Zod schema
+    const validation = signUpSchema.safeParse({ email, name, password });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 
@@ -53,10 +47,16 @@ export default function SignUp() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to sign up');
-      localStorage.setItem('token', data.access_token);
+
+      // Store user and token in Zustand
+      login({ email, name }, data.access_token);
       navigate('/app');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function SignUp() {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+
               />
             </div>
             <div className="space-y-2">
@@ -97,7 +97,6 @@ export default function SignUp() {
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
                 minLength={3}
               />
             </div>
@@ -109,7 +108,6 @@ export default function SignUp() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 minLength={8}
               />
               <p className="text-xs text-muted-foreground">

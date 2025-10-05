@@ -9,16 +9,16 @@ import {
   CardTitle,
 } from '../components/ui/card';
 import { LogOut, User, Mail, CheckCircle } from 'lucide-react';
+import { useUserStore } from '../store/user-store';
 
 const API_BASE = 'http://localhost:3000/api';
 
 export default function AppPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState<string | null>(null);
+  const { user, token, logout: logoutStore, setUser } = useUserStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     if (!token) {
       navigate('/signin');
       return;
@@ -32,22 +32,22 @@ export default function AppPage() {
           },
         });
         if (res.status === 401) {
-          localStorage.removeItem('token');
+          logoutStore();
           navigate('/signin');
           return;
         }
         const data = await res.json();
-        setEmail(data.email || null);
+        setUser({ email: data.email, name: data.name, id: data.id });
       } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
       }
     })();
-  }, [navigate]);
+  }, [navigate, token, logoutStore, setUser]);
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = () => {
+    logoutStore();
     navigate('/signin');
   };
 
@@ -74,7 +74,7 @@ export default function AppPage() {
                 Welcome to your application
               </p>
             </div>
-            <Button onClick={logout} variant="outline" className="gap-2">
+            <Button onClick={handleLogout} variant="outline" className="gap-2">
               <LogOut className="h-4 w-4" />
               Logout
             </Button>
@@ -99,7 +99,7 @@ export default function AppPage() {
                   <Mail className="h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Email Address</p>
-                    <p className="text-sm text-muted-foreground">{email}</p>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
                   </div>
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
