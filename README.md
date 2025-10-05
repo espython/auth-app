@@ -12,7 +12,7 @@ This app lets users sign up, sign in, and access a protected page. It includes i
 - Sign up with Email, Name (min 3 chars), Password (min 8 chars, 1 letter, 1 number, 1 special char)
 - Sign in with Email + Password
 - Protected application page with welcome message and logout
-- NestJS backend with MongoDB, Mongoose, JWT, password hashing (bcrypt)
+- NestJS backend with MongoDB, Mongoose, JWT, password hashing (Node.js native crypto/scrypt)
 - One protected endpoint: `GET /api/auth/me`
 - Basic security: Helmet, global validation pipe, CORS
 - API documentation via Swagger at `/api/docs`
@@ -56,7 +56,7 @@ npm run dev
 - POST `/api/auth/signin` — body: `{ email, password }` — returns `{ access_token, user }`
 - GET `/api/auth/me` — requires `Authorization: Bearer <token>` — returns `{ userId, email }`
 
-Passwords are hashed with bcrypt and never returned by the API.
+Passwords are hashed using Node.js native scrypt (with random salt) and never returned by the API.
 
 ## Frontend
 

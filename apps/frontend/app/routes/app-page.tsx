@@ -69,10 +69,7 @@ export default function AppPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
-                Welcome to your application
-              </p>
+              <h1 className="text-3xl font-bold tracking-tight">Welcome to the application.</h1>
             </div>
             <Button onClick={handleLogout} variant="outline" className="gap-2">
               <LogOut className="h-4 w-4" />
