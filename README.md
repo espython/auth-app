@@ -1,101 +1,101 @@
-# AuthApp
+# Full Stack Auth App
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A simple, production-ready authentication module built with:
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+- Frontend: React Router + TypeScript
+- Backend: NestJS + MongoDB (Mongoose) + JWT
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+This app lets users sign up, sign in, and access a protected page. It includes input validation, password hashing, JWT authentication, a protected endpoint, basic security hardening, and API docs.
 
-## Run tasks
+## Requirements implemented
 
-To run the dev server for your app, use:
+- Sign up with Email, Name (min 3 chars), Password (min 8 chars, 1 letter, 1 number, 1 special char)
+- Sign in with Email + Password
+- Protected application page with welcome message and logout
+- NestJS backend with MongoDB, Mongoose, JWT, password hashing (bcrypt)
+- One protected endpoint: `GET /api/auth/me`
+- Basic security: Helmet, global validation pipe, CORS
+- API documentation via Swagger at `/api/docs`
 
-```sh
-npx nx serve frontend
+## Getting Started
+
+### Prerequisites
+- Node.js 20+
+- MongoDB (local or remote). If local, default used is `mongodb://localhost:27017/authapp`.
+
+### Environment Variables
+Create a `.env` file in the repo root (or `apps/backend/.env`). See `.env.example`.
+
+Required variables:
+
+```
+MONGODB_URI=mongodb://localhost:27017/authapp
+JWT_SECRET=change_me_to_a_long_random_string
+PORT=3000
 ```
 
-To create a production bundle:
+### Install dependencies
 
-```sh
-npx nx build frontend
+```bash
+npm install
 ```
 
-To see all available targets to run for a project, run:
+### Run the app (frontend + backend concurrently)
 
-```sh
-npx nx show project frontend
+```bash
+npm run dev
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+- Frontend: http://localhost:4200
+- Backend API: http://localhost:3000/api
+- API Docs (Swagger): http://localhost:3000/api/docs
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## API Overview
 
-## Add new projects
+- POST `/api/auth/signup` — body: `{ email, name, password }` — returns `{ access_token, user }`
+- POST `/api/auth/signin` — body: `{ email, password }` — returns `{ access_token, user }`
+- GET `/api/auth/me` — requires `Authorization: Bearer <token>` — returns `{ userId, email }`
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+Passwords are hashed with bcrypt and never returned by the API.
 
-Use the plugin's generator to create new projects.
+## Frontend
 
-To generate a new application, use:
+Routes:
+- `/signin` (index) — Sign in form with validation
+- `/signup` — Sign up form with validation
+- `/app` — Protected page that shows "Welcome to the application." and a Logout button
 
-```sh
-npx nx g @nx/react:app demo
-```
+A JWT token is stored in `localStorage` on successful auth. The `/app` page verifies the token by calling the protected `GET /api/auth/me` endpoint and redirects to `/signin` if unauthorized.
 
-To generate a new library, use:
+## Security & Production Notes
 
-```sh
-npx nx g @nx/react:lib mylib
-```
+- Helmet enabled for basic HTTP headers security
+- Global validation pipe with whitelist+transform
+- CORS enabled for `http://localhost:4200` (adjust in `apps/backend/src/main.ts` for production)
+- Keep `JWT_SECRET` long and random; rotate regularly in production
+- Use TLS/HTTPS and secure cookie storage for tokens in real production systems
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## Project Structure
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- `apps/frontend` — React Router app
+- `apps/backend` — NestJS app (Mongoose, Auth, Users)
 
-## Set up CI!
+## Scripts
 
-### Step 1
+- `npm run dev` — Run frontend and backend together (Nx run-many)
+- `npm start` — Start backend only
 
-To connect to Nx Cloud, run the following command:
+## Testing the Flow (manual)
+1. Start MongoDB locally (or set MONGODB_URI to remote)
+2. `npm run dev`
+3. Open http://localhost:4200
+4. Go to Sign Up, create a user
+5. You should be redirected to the app page and see the protected content
+6. Logout and try Sign In with the same credentials
 
-```sh
-npx nx connect
-```
+## Nice-to-haves included
+- Logging via Nest Logger (startup) and structured module separation
+- Swagger API docs at `/api/docs`
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## License
+MIT
