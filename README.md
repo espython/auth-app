@@ -84,6 +84,46 @@ A JWT token is stored in `localStorage` on successful auth. The `/app` page veri
 
 - `npm run dev` — Run frontend and backend together (Nx run-many)
 - `npm start` — Start backend only
+- `npm test` — Run all unit tests
+- `npm run test:e2e` — Run E2E tests
+- `npm run test:coverage` — Run tests with coverage report
+
+## Testing
+
+### Unit Tests
+Run unit tests for the AuthService:
+```bash
+npx nx test @auth-app/backend
+```
+
+With coverage:
+```bash
+npx nx test @auth-app/backend --coverage
+```
+
+### E2E Tests
+Run end-to-end tests for authentication flows:
+```bash
+# Start the backend first
+npm start
+
+# In another terminal, run E2E tests
+npx nx e2e @auth-app/backend-e2e
+```
+
+The E2E tests cover:
+- User signup with validation
+- User signin with various scenarios
+- Protected endpoint access
+- Complete authentication flow
+- Security tests
+
+### CI/CD
+GitHub Actions workflow automatically runs on push/PR:
+- Linting
+- Unit tests with coverage
+- Build verification
+- E2E tests with MongoDB service
 
 ## Testing the Flow (manual)
 1. Start MongoDB locally (or set MONGODB_URI to remote)
@@ -94,8 +134,12 @@ A JWT token is stored in `localStorage` on successful auth. The `/app` page veri
 6. Logout and try Sign In with the same credentials
 
 ## Nice-to-haves included
-- Logging via Nest Logger (startup) and structured module separation
-- Swagger API docs at `/api/docs`
+- ✅ Logging via Nest Logger (startup) and structured module separation
+- ✅ Swagger API docs at `/api/docs`
+- ✅ Unit tests for AuthService
+- ✅ E2E tests for authentication flows
+- ✅ GitHub Actions CI/CD pipeline
+- ✅ Error handling throughout the application
 
 ## License
 MIT

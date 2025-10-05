@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code
+        run: npx nx run-many --target=lint --all --parallel=3
+        continue-on-error: true
+
+      - name: Run unit tests
+        run: npx nx test @auth-app/backend --coverage
+        env:
+          MONGODB_URI: mongodb://localhost:27017/authapp-test
+          JWT_SECRET: test-jwt-secret-key-for-ci
+
+      - name: Build backend
+        run: npx nx build @auth-app/backend
+        env:
+          MONGODB_URI: mongodb://localhost:27017/authapp-test
+          JWT_SECRET: test-jwt-secret-key-for-ci
+
+      - name: Build frontend
+        run: npx nx build @auth-app/frontend
+
+      - name: Start backend for E2E tests
+        run: |
+          npx nx serve @auth-app/backend &
+          echo $! > backend.pid
+          sleep 10
+        env:
+          MONGODB_URI: mongodb://localhost:27017/authapp-test
+          JWT_SECRET: test-jwt-secret-key-for-ci
+          PORT: 3000
+
+      - name: Run E2E tests
+        run: npx nx e2e @auth-app/backend-e2e
+        env:
+          API_URL: http://localhost:3000/api
+
+      - name: Stop backend
+        if: always()
+        run: |
+          if [ -f backend.pid ]; then
+            kill $(cat backend.pid) || true
+          fi
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./apps/backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+        continue-on-error: true
+
+  build-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all projects
+        run: npx nx run-many --target=build --all --parallel=3
+        env:
+          MONGODB_URI: mongodb://localhost:27017/authapp-test
+          JWT_SECRET: test-jwt-secret-key-for-ci
+
+      - name: Check for build artifacts
+        run: |
+          ls -la dist/
+          echo "Build completed successfully"
